@@ -2,7 +2,7 @@ import { Employee } from '..';
 
 export class Salesman extends Employee {
   constructor(name) {
-    super(name, 1.5);
+    super(name);
     this.quota = 1.5;
   }
 }

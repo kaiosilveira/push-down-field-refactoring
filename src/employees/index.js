@@ -1,7 +1,6 @@
 export class Employee {
-  constructor(name, quota) {
+  constructor(name) {
     this._name = name;
-    this.quota = quota;
   }
 
   get name() {
