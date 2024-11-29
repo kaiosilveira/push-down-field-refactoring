@@ -1,32 +1,10 @@
 [![Continuous Integration](https://github.com/kaiosilveira/push-down-field-refactoring/actions/workflows/ci.yml/badge.svg)](https://github.com/kaiosilveira/push-down-field-refactoring/actions/workflows/ci.yml)
 
-# Refactoring catalog repository template
-
-This is a quick template to help me get a new refactoring repo going.
-
-## Useful commands
-
-- Generate markdown containing a diff with patch information based on a range of commits:
-
-```bash
-yarn tools:cli generate-diff -f <first_commit_sha> -l <last_commit_sha>
-```
-
-- To generate the commit history table for the last section, including the correct links:
-
-```bash
-yarn tools:cli generate-cmt-table -r push-down-field-refactoring
-```
-
----
-
 ℹ️ _This repository is part of my Refactoring catalog based on Fowler's book with the same title. Please see [kaiosilveira/refactoring](https://github.com/kaiosilveira/refactoring) for more details._
 
 ---
 
 # Push Down Field
-
-**Formerly: Old name**
 
 <table>
 <thead>
@@ -37,8 +15,13 @@ yarn tools:cli generate-cmt-table -r push-down-field-refactoring
 <tr>
 <td>
 
-```javascript
-result = initial.code;
+```typescript
+class Employee {
+  protected quota: string;
+}
+
+class Engineer extends Employee { ... }
+class Salesman extends Employee { ... }
 ```
 
 </td>
@@ -46,10 +29,10 @@ result = initial.code;
 <td>
 
 ```javascript
-result = newCode();
-
-function newCode() {
-  return 'new code';
+class Employee { ... }
+class Engineer extends Employee { ... }
+class Salesman extends Employee {
+  private quota: string;
 }
 ```
 
@@ -58,46 +41,68 @@ function newCode() {
 </tbody>
 </table>
 
-**Inverse of: [Another refactoring](https://github.com/kaiosilveira/refactoring)**
+**Inverse of: [Pull Up Field](https://github.com/kaiosilveira/pull-up-field-refactoring)**
 
-**Refactoring introduction and motivation** dolore sunt deserunt proident enim excepteur et cillum duis velit dolor. Aute proident laborum officia velit culpa enim occaecat officia sunt aute labore id anim minim. Eu minim esse eiusmod enim nulla Lorem. Enim velit in minim anim anim ad duis aute ipsum voluptate do nulla. Ad tempor sint dolore et ullamco aute nulla irure sunt commodo nulla aliquip.
+As it often happens with class hierarchies, we have some specific fields that was firstly thought to be common to all subclasses, but end up being relevant just for some of those. This refactoring gives a glimpse of what to do in these cases.
 
 ## Working example
 
-**Working example general explanation** proident reprehenderit mollit non voluptate ea aliquip ad ipsum anim veniam non nostrud. Cupidatat labore occaecat labore veniam incididunt pariatur elit officia. Aute nisi in nulla non dolor ullamco ut dolore do irure sit nulla incididunt enim. Cupidatat aliquip minim culpa enim. Fugiat occaecat qui nostrud nostrud eu exercitation Lorem pariatur fugiat ea consectetur pariatur irure. Officia dolore veniam duis duis eu eiusmod cupidatat laboris duis ad proident adipisicing. Minim veniam consectetur ut deserunt fugiat id incididunt reprehenderit.
+Our working example is a straightforward `Employee` class hierarchy:
+
+```mermaid
+classDiagram
+    class Employee
+    Employee <|-- Engineer
+    Employee <|-- Salesman
+
+    class Employee {
+        name
+        quota
+    }
+```
+
+Our goal is to move the `quota` field down to `Salesman`, since it's only used there.
 
 ### Test suite
 
-Occaecat et incididunt aliquip ex id dolore. Et excepteur et ea aute culpa fugiat consectetur veniam aliqua. Adipisicing amet reprehenderit elit qui.
+Our test suite covers the basic properties of `Salesman`:
 
 ```javascript
-describe('functionBeingRefactored', () => {
-  it('should work', () => {
-    expect(0).toEqual(1);
+describe('Salesman', () => {
+  it('should have a name', () => {
+    const salesman = new Salesman('Kaio');
+    expect(salesman.name).toBe('Kaio');
+  });
+
+  it('should have a quota', () => {
+    const salesman = new Salesman('Kaio');
+    expect(salesman.quota).toBe(1.5);
   });
 });
 ```
 
-Magna ut tempor et ut elit culpa id minim Lorem aliqua laboris aliqua dolor. Irure mollit ad in et enim consequat cillum voluptate et amet esse. Fugiat incididunt ea nulla cupidatat magna enim adipisicing consequat aliquip commodo elit et. Mollit aute irure consequat sunt. Dolor consequat elit voluptate aute duis qui eu do veniam laborum elit quis.
+That's the minimum we need in place to get going.
 
 ### Steps
 
-**Step 1 description** mollit eu nulla mollit irure sint proident sint ipsum deserunt ad consectetur laborum incididunt aliqua. Officia occaecat deserunt in aute veniam sunt ad fugiat culpa sunt velit nulla. Pariatur anim sit minim sit duis mollit.
+We start by copying the `quota` field into `Salesman`:
 
 ```diff
-diff --git a/src/price-order/index.js b/src/price-order/index.js
-@@ -3,6 +3,11 @@
--module.exports = old;
-+module.exports = new;
+diff --git Salesman...
+  constructor(name) {
+    super(name, 1.5);
++   this.quota = 1.5;
+  }
 ```
 
-**Step n description** mollit eu nulla mollit irure sint proident sint ipsum deserunt ad consectetur laborum incididunt aliqua. Officia occaecat deserunt in aute veniam sunt ad fugiat culpa sunt velit nulla. Pariatur anim sit minim sit duis mollit.
+then we remove `quota` from `Employee` (and update the other subclass so they don't need to provide this value any longer):
 
 ```diff
-diff --git a/src/price-order/index.js b/src/price-order/index.js
-@@ -3,6 +3,11 @@
--module.exports = old;
-+module.exports = new;
+diff --git Employee...
+   constructor(name) {
+-    super(name, 0);
++    super(name);
+   }
 ```
 
 And that's it!
@@ -106,10 +111,9 @@ And that's it!
 
 Below there's the commit history for the steps detailed above.
 
-| Commit SHA                                                                            | Message                  |
-| ------------------------------------------------------------------------------------- | ------------------------ |
-| [cmt-sha-1](https://github.com/kaiosilveira/push-down-field-refactoring/commit-SHA-1) | description of commit #1 |
-| [cmt-sha-2](https://github.com/kaiosilveira/push-down-field-refactoring/commit-SHA-2) | description of commit #2 |
-| [cmt-sha-n](https://github.com/kaiosilveira/push-down-field-refactoring/commit-SHA-n) | description of commit #n |
+| Commit SHA                                                                                                             | Message                              |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| [6b116ee](https://github.com/kaiosilveira/push-down-field-refactoring/commit/6b116ee42712ce8961ca2972d4ce7e7fc527fcbf) | copy `quota` field into `Salesman`   |
+| [afe975e](https://github.com/kaiosilveira/push-down-field-refactoring/commit/afe975e5952e2bdfddb617bb67b2d040e84b5367) | remove `quota` field from `Employee` |
 
-For the full commit history for this project, check the [Commit History tab](https://github.com/kaiosilveira/push-down-field-refactoring/commits/main).
+For the full commit history for this project, check the [Commit History tab](https://github.com/kaiosilveira/push-down-method-refactoring/commits/main).
